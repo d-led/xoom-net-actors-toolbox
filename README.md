@@ -59,16 +59,47 @@ dotnet pack -o artifacts && dotnet run --project examples/Hello
 * **The generator is Roslyn's answer to Lombok** — it comes inside this package
   (`analyzers/dotnet/cs`), so there is no extra step, no `vlingo-actors.json`, nothing to run.
 
-## Publishing
+## Try it before the official release
+
+The `Publish` workflow pushes every build to GitHub Packages: each push to `main` as
+`0.1.0-snapshot.<build-number>`, each `v*` tag as that tag's version (`v0.1.0` → `0.1.0`).
+GitHub Packages asks for a token with `read:packages` — your user name, and a personal access token
+as the password.
+
+```bash
+dotnet nuget add source "https://nuget.pkg.github.com/d-led/index.json" \
+  --name d-led --username YOUR_GITHUB_USERNAME --password YOUR_GITHUB_TOKEN \
+  --store-password-in-clear-text
+```
+
+Or in a `nuget.config` next to your project:
+
+```xml
+<configuration>
+  <packageSources>
+    <add key="d-led" value="https://nuget.pkg.github.com/d-led/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <d-led>
+      <add key="Username" value="YOUR_GITHUB_USERNAME" />
+      <add key="ClearTextPassword" value="YOUR_GITHUB_TOKEN" />
+    </d-led>
+  </packageSourceCredentials>
+</configuration>
+```
+
+Then use `Vlingo.Xoom.Actors.Toolbox` version `0.1.0`, or a snapshot from the packages page.
+
+## Releasing
+
+Pushing a `v*` tag publishes that version, for example `git tag v0.1.0 && git push origin v0.1.0`.
+By hand:
 
 ```bash
 dotnet pack -c Release -o artifacts
 dotnet nuget push "artifacts/*.nupkg" \
   --source "https://nuget.pkg.github.com/d-led/index.json" --api-key "$GITHUB_TOKEN"
 ```
-
-Set `RepositoryUrl` in `src/Vlingo.Xoom.Actors.Toolbox/Vlingo.Xoom.Actors.Toolbox.csproj` to the
-repository you publish to. See [`.github/workflows/publish.yml`](.github/workflows/publish.yml).
 
 ## Building
 
