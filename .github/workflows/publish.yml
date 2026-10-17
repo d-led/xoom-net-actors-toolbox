@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      version: ${{ steps.version.outputs.value }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -41,3 +43,85 @@ jobs:
           dotnet nuget push "artifacts/*.nupkg" \
             --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
             --api-key "${{ secrets.GITHUB_TOKEN }}"
+
+  # Proves the README: an empty project with only the two packages and the documented source
+  # consumes what was just published, with no local cache. The assembly that holds the protocols
+  # is named with the Vlingo prefix, as the README requires.
+  verify:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Consume the published package without a local cache
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p consumer
+
+          cat > consumer/consumer.csproj <<'EOF'
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net10.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+              <AssemblyName>Vlingo.Consumer</AssemblyName>
+            </PropertyGroup>
+          </Project>
+          EOF
+
+          dotnet nuget add source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+            --name d-led \
+            --username "${{ github.actor }}" \
+            --password "$GITHUB_TOKEN" \
+            --store-password-in-clear-text
+
+          dotnet add consumer package Vlingo.Xoom.Actors.Toolbox --version "${{ needs.publish.outputs.version }}"
+          dotnet add consumer package Vlingo.Xoom.Actors --version 1.10.1
+
+          cat > consumer/IHello.cs <<'EOF'
+          using Vlingo.Xoom.Actors.Toolbox;
+          using Vlingo.Xoom.Common;
+
+          namespace Demo;
+
+          [ActorProtocol]
+          public interface IHello
+          {
+              ICompletes<string> Hello(string name);
+          }
+          EOF
+
+          cat > consumer/HelloActor.cs <<'EOF'
+          using Vlingo.Xoom.Actors;
+          using Vlingo.Xoom.Common;
+
+          namespace Demo;
+
+          public class HelloActor : Actor, IHello
+          {
+              public ICompletes<string> Hello(string name) => Completes<string>().With($"Hello, {name}!");
+          }
+          EOF
+
+          cat > consumer/Program.cs <<'EOF'
+          using Vlingo.Xoom.Actors.Toolbox;
+          using Demo;
+
+          var world = Actors.World("hello");
+          var hello = Actors.Actor<IHello>(world, () => new HelloActor());
+
+          Console.WriteLine(hello.Hello("World").Await());
+
+          Actors.Shutdown(world);
+          EOF
+
+          dotnet run --project consumer | tee run.log
+          grep -q "Hello, World!" run.log
