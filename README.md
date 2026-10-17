@@ -64,7 +64,8 @@ dotnet pack -o artifacts && dotnet run --project examples/Hello
 The `Publish` workflow pushes every build to GitHub Packages: each push to `main` as
 `0.1.0-snapshot.<build-number>`, each `v*` tag as that tag's version (`v0.1.0` → `0.1.0`).
 GitHub Packages asks for a token with `read:packages` — your user name, and a personal access token
-as the password.
+as the password. The `verify` job then consumes that package from an empty cache with exactly the
+configuration below, so the next block is exercised on every push.
 
 ```bash
 dotnet nuget add source "https://nuget.pkg.github.com/d-led/index.json" \
