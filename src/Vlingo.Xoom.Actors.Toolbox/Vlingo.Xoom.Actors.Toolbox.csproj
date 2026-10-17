@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Vlingo.Xoom.Actors.Toolbox</RootNamespace>
+    <AssemblyName>Vlingo.Xoom.Actors.Toolbox</AssemblyName>
+
+    <PackageId>Vlingo.Xoom.Actors.Toolbox</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>VLINGO LABS</Authors>
+    <Description>Zero-boilerplate actors: compile-time proxy generation and the three calls that start, use and stop an actor system.</Description>
+    <PackageLicenseExpression>MPL-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/d-led/xoom-net-actors-toolbox</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/d-led/xoom-net-actors-toolbox</PackageProjectUrl>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The only dependency of the toolbox: the actors library itself. -->
+    <PackageReference Include="Vlingo.Xoom.Actors" Version="1.10.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The generator is part of this package: analyzers/dotnet/cs, so consumers add one dependency. -->
+    <ProjectReference Include="..\Vlingo.Xoom.Actors.Toolbox.Generator\Vlingo.Xoom.Actors.Toolbox.Generator.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+    <None Include="..\Vlingo.Xoom.Actors.Toolbox.Generator\bin\$(Configuration)\netstandard2.0\Vlingo.Xoom.Actors.Toolbox.Generator.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
+  </ItemGroup>
+
+</Project>

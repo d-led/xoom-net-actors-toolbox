@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>HelloExample</RootNamespace>
+    <!--
+      ActorProxy looks a proxy up through DynaClassLoader.LoadClass, which searches only assemblies
+      whose name starts with "Vlingo". The assembly that holds the protocols therefore has to be
+      named that way; in an application, protocols live in their own library, for example
+      Vlingo.YourApp.Actors.
+    -->
+    <AssemblyName>Vlingo.HelloExample</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Vlingo.Xoom.Actors" Version="1.10.1" />
+    <PackageReference Include="Vlingo.Xoom.Actors.Toolbox" Version="0.1.0" />
+  </ItemGroup>
+
+</Project>
